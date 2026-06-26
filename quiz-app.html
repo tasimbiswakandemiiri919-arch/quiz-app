@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevQuiz — Software Engineering Challenge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:        #0a0f1e;
+    --surface:   #111827;
+    --card:      #1a2235;
+    --border:    rgba(99,179,237,0.12);
+    --accent:    #63b3ed;
+    --accent2:   #68d391;
+    --danger:    #fc8181;
+    --warning:   #f6ad55;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --correct:   #22543d;
+    --correctbg: rgba(34,84,61,0.3);
+    --wrongbg:   rgba(154,44,44,0.3);
+    --wrong:     #9a2c2c;
+    --radius:    12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-image:
+      radial-gradient(ellipse at 15% 30%, rgba(99,179,237,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 70%, rgba(104,211,145,0.04) 0%, transparent 55%);
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+  .logo span { color: var(--accent2); }
+  .tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 680px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  }
+
+  /* ── Start Screen ── */
+  .start-screen { text-align: center; }
+  .start-screen h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .start-screen p { color: var(--muted); margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.6; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-box .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-box .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+  .difficulty-row {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .diff-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
+  .diff-btn:hover, .diff-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(99,179,237,0.08); }
+  .diff-btn.easy.active  { border-color: var(--accent2); color: var(--accent2); background: rgba(104,211,145,0.08); }
+  .diff-btn.hard.active  { border-color: var(--danger);  color: var(--danger);  background: rgba(252,129,129,0.08); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #3182ce);
+    color: white;
+    width: 100%;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    margin-top: 0.75rem;
+    width: 100%;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ── Quiz Screen ── */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .progress-wrap { flex: 1; margin-right: 1rem; }
+  .progress-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .progress-bar {
+    height: 5px;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  /* Timer */
+  .timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent2);
+    min-width: 52px;
+    text-align: right;
+    transition: color 0.3s;
+  }
+  .timer.warn  { color: var(--warning); }
+  .timer.danger{ color: var(--danger); animation: pulse 0.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* Category tag */
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .q-tag {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(99,179,237,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(99,179,237,0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .q-diff {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .q-diff.easy { background: rgba(104,211,145,0.12); color: var(--accent2); border: 1px solid rgba(104,211,145,0.2); }
+  .q-diff.medium { background: rgba(246,173,85,0.12); color: var(--warning); border: 1px solid rgba(246,173,85,0.2); }
+  .q-diff.hard { background: rgba(252,129,129,0.12); color: var(--danger); border: 1px solid rgba(252,129,129,0.2); }
+
+  /* Question */
+  .question {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+  .question code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent);
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 0.65rem; }
+  .option {
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text);
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(99,179,237,0.06); }
+  .option-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+  .option.correct {
+    border-color: var(--accent2);
+    background: var(--correctbg);
+    color: #9ae6b4;
+  }
+  .option.correct .option-letter { background: var(--accent2); color: #0a0f1e; }
+  .option.wrong {
+    border-color: var(--danger);
+    background: var(--wrongbg);
+    color: #fc8181;
+  }
+  .option.wrong .option-letter { background: var(--danger); color: #0a0f1e; }
+  .option.disabled { cursor: default; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius);
+    background: rgba(99,179,237,0.06);
+    border: 1px solid rgba(99,179,237,0.15);
+    font-size: 0.85rem;
+    color: #a0aec0;
+    line-height: 1.6;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--accent); }
+
+  .next-btn-wrap { margin-top: 1.2rem; }
+
+  /* Score badges row */
+  .score-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .score-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .score-pill.good { border-color: var(--accent2); color: var(--accent2); }
+  .score-pill.warn { border-color: var(--warning); color: var(--warning); }
+  .score-pill.bad  { border-color: var(--danger);  color: var(--danger); }
+
+  /* Results */
+  .result-screen { text-align: center; }
+  .big-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    margin: 1rem 0 0.3rem;
+  }
+  .score-label { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem;
+  }
+  .result-box .rnum {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .result-box .rlbl { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+  .grade-msg { font-size: 1rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+
+  /* Hidden */
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Dev<span>Quiz</span></div>
+  <div class="tagline">// SOFTWARE ENGINEERING CHALLENGE</div>
+</div>
+
+<div class="card">
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="start-screen">
+    <h2>Test Your Dev Knowledge 🧠</h2>
+    <p>20 questions covering OOP, Data Structures, Algorithms, Databases, Networking, and more. Each question has a 20-second timer.</p>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="num">20</div><div class="lbl">Questions</div></div>
+      <div class="stat-box"><div class="num">20s</div><div class="lbl">Per Question</div></div>
+      <div class="stat-box"><div class="num">5</div><div class="lbl">Topics</div></div>
+    </div>
+
+    <div class="difficulty-row">
+      <button class="diff-btn easy active" onclick="setDiff('easy')">Easy</button>
+      <button class="diff-btn medium" onclick="setDiff('medium')">Medium</button>
+      <button class="diff-btn hard" onclick="setDiff('hard')">Hard</button>
+    </div>
+
+    <button class="btn btn-primary" onclick="startQuiz()">Start Quiz →</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen" class="hidden">
+    <div class="quiz-header">
+      <div class="progress-wrap">
+        <div class="progress-label" id="progressLabel">Question 1 of 20</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div class="timer" id="timer">20</div>
+    </div>
+
+    <div class="q-meta">
+      <span class="q-tag" id="qCategory">OOP</span>
+      <span class="q-diff" id="qDiff">Easy</span>
+    </div>
+
+    <div class="question" id="questionText"></div>
+
+    <div class="options" id="optionsContainer"></div>
+
+    <div class="explanation" id="explanation"></div>
+
+    <div class="next-btn-wrap hidden" id="nextBtnWrap">
+      <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="resultScreen" class="hidden result-screen">
+    <div class="big-score" id="bigScore">0%</div>
+    <div class="score-label" id="scoreLabel">Your Score</div>
+
+    <div class="score-row" id="scorePills"></div>
+
+    <div class="result-grid">
+      <div class="result-box">
+        <div class="rnum" id="rCorrect" style="color:var(--accent2)">0</div>
+        <div class="rlbl">Correct</div>
+      </div>
+      <div class="result-box">
+        <div class="rnum" id="rWrong" style="color:var(--danger)">0</div>
+        <div class="rlbl">Wrong</div>
+      </div>
+      <div class="result-box">
+        <div class="rnum" id="rTime" style="color:var(--accent)">0s</div>
+        <div class="rlbl">Avg Time</div>
+      </div>
+    </div>
+
+    <div class="grade-msg" id="gradeMsg"></div>
+
+    <button class="btn btn-primary" onclick="restartQuiz()">Try Again 🔄</button>
+    <button class="btn btn-secondary" onclick="showStart()">Change Difficulty</button>
+  </div>
+
+</div>
+
+<script>
+// ── Questions Bank ────────────────────────────────────────────────────────────
+const ALL_QUESTIONS = [
+  // OOP
+  { q:"What does OOP stand for?", opts:["Object-Oriented Programming","Open-Operand Protocol","Object-Oriented Protocol","Output-Oriented Programming"], ans:0, cat:"OOP", diff:"easy", exp:"OOP stands for Object-Oriented Programming, a paradigm based on objects that contain data (fields) and behaviour (methods)." },
+  { q:"Which OOP principle hides internal implementation details?", opts:["Inheritance","Polymorphism","Encapsulation","Abstraction"], ans:2, cat:"OOP", diff:"easy", exp:"Encapsulation bundles data and methods together while restricting direct access to internal state, using access modifiers like private and public." },
+  { q:"Which keyword is used to inherit a class in Java?", opts:["implements","inherits","extends","super"], ans:2, cat:"OOP", diff:"easy", exp:"In Java, the 'extends' keyword is used for class inheritance. 'implements' is used for interfaces." },
+  { q:"What is polymorphism?", opts:["One class, many objects","One method name, many forms","Multiple inheritance","Data hiding"], ans:1, cat:"OOP", diff:"easy", exp:"Polymorphism means 'many forms' — the same method name can behave differently depending on the object or parameters." },
+  { q:"What does the 'super' keyword refer to in Java?", opts:["The current class","The subclass","The parent class","A static method"], ans:2, cat:"OOP", diff:"medium", exp:"'super' refers to the parent (superclass). It's used to call parent constructors or methods from within a subclass." },
+  { q:"What is an abstract class?", opts:["A class with no methods","A class that cannot be instantiated","A class with only static methods","A class with private fields only"], ans:1, cat:"OOP", diff:"medium", exp:"An abstract class cannot be instantiated directly. It may contain abstract methods that subclasses must implement." },
+  { q:"What is the difference between an interface and an abstract class in Java?", opts:["No difference","Interface can have constructors, abstract class cannot","A class can implement multiple interfaces but extend only one class","Abstract classes are faster"], ans:2, cat:"OOP", diff:"hard", exp:"Java supports multiple interface implementation but only single class inheritance. Interfaces (Java 8+) can have default methods." },
+
+  // Data Structures
+  { q:"What is the time complexity of accessing an element in an array by index?", opts:["O(n)","O(log n)","O(1)","O(n²)"], ans:2, cat:"DSA", diff:"easy", exp:"Array access by index is O(1) — constant time — because the memory address is calculated directly using base address + index × element size." },
+  { q:"Which data structure uses LIFO order?", opts:["Queue","Stack","Linked List","Tree"], ans:1, cat:"DSA", diff:"easy", exp:"A Stack follows Last-In-First-Out (LIFO). The last element pushed is the first popped. Think of a stack of plates." },
+  { q:"What is the worst-case time complexity of Binary Search?", opts:["O(n)","O(n²)","O(log n)","O(1)"], ans:2, cat:"DSA", diff:"medium", exp:"Binary search halves the search space each step, giving O(log n) worst case. It requires the array to be sorted." },
+  { q:"In a linked list, what does each node contain?", opts:["Only data","Only a pointer","Data and a pointer to the next node","An index and data"], ans:2, cat:"DSA", diff:"easy", exp:"Each node in a singly linked list stores data and a reference (pointer) to the next node. The last node points to null." },
+  { q:"What is the time complexity of Bubble Sort in the worst case?", opts:["O(n)","O(n log n)","O(n²)","O(log n)"], ans:2, cat:"DSA", diff:"medium", exp:"Bubble Sort has O(n²) worst-case complexity because it uses nested loops to compare and swap adjacent elements." },
+  { q:"Which data structure is used for BFS traversal of a graph?", opts:["Stack","Queue","Priority Queue","Array"], ans:1, cat:"DSA", diff:"medium", exp:"Breadth-First Search uses a Queue (FIFO) to explore nodes level by level. DFS uses a Stack or recursion." },
+
+  // Databases
+  { q:"What does SQL stand for?", opts:["Structured Query Language","System Query Language","Simple Query Logic","Structured Quick Language"], ans:0, cat:"Database", diff:"easy", exp:"SQL stands for Structured Query Language — the standard language for managing and querying relational databases." },
+  { q:"Which SQL command is used to retrieve data from a table?", opts:["GET","FETCH","SELECT","RETRIEVE"], ans:2, cat:"Database", diff:"easy", exp:"SELECT is used to query data. Example: SELECT * FROM students WHERE year = 2;" },
+  { q:"What does ACID stand for in databases?", opts:["Atomicity, Consistency, Isolation, Durability","Access, Control, Index, Data","Atomic, Clustered, Indexed, Distributed","Availability, Consistency, Integrity, Durability"], ans:0, cat:"Database", diff:"medium", exp:"ACID properties ensure reliable database transactions: Atomicity (all or nothing), Consistency (valid state), Isolation (concurrent transactions don't interfere), Durability (committed data persists)." },
+  { q:"What is a PRIMARY KEY in a database?", opts:["A key that can have NULL values","A key that uniquely identifies each record","A foreign key reference","An index key"], ans:1, cat:"Database", diff:"easy", exp:"A PRIMARY KEY uniquely identifies each row in a table. It cannot be NULL and must be unique for every record." },
+
+  // Networking & Security
+  { q:"What does HTTP stand for?", opts:["HyperText Transfer Protocol","High Transfer Text Protocol","HyperText Transport Procedure","Hosted Text Transfer Protocol"], ans:0, cat:"Networking", diff:"easy", exp:"HTTP (HyperText Transfer Protocol) is the foundation of data communication on the web. HTTPS adds SSL/TLS encryption." },
+  { q:"Which layer of the OSI model handles IP addressing?", opts:["Transport Layer","Data Link Layer","Network Layer","Session Layer"], ans:2, cat:"Networking", diff:"medium", exp:"The Network Layer (Layer 3) handles logical addressing (IP addresses) and routing packets between networks." },
+  { q:"What is the purpose of a firewall?", opts:["Speed up network traffic","Monitor and control incoming and outgoing network traffic","Store network data","Connect to the internet"], ans:1, cat:"Security", diff:"easy", exp:"A firewall monitors and filters network traffic based on predefined security rules to protect against unauthorised access." },
+  { q:"What is SQL Injection?", opts:["A way to speed up SQL queries","An attack that inserts malicious SQL code into input fields","A method to normalise databases","A backup strategy"], ans:1, cat:"Security", diff:"medium", exp:"SQL Injection is a security attack where malicious SQL code is inserted into input fields to manipulate or access a database. Use prepared statements to prevent it." },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let questions = [];
+let current   = 0;
+let score     = 0;
+let answered  = false;
+let timerInterval;
+let timeLeft  = 20;
+let totalTime = 0;
+let difficulty = 'easy';
+let timings   = [];
+
+// ── Difficulty ────────────────────────────────────────────────────────────────
+function setDiff(d) {
+  difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.diff-btn.' + d).classList.add('active');
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+function startQuiz() {
+  // Filter or use all questions based on difficulty
+  let pool = difficulty === 'easy'
+    ? ALL_QUESTIONS.filter(q => q.diff === 'easy')
+    : difficulty === 'hard'
+    ? ALL_QUESTIONS.filter(q => q.diff === 'hard' || q.diff === 'medium')
+    : ALL_QUESTIONS;
+
+  // Shuffle and take 10
+  questions = shuffle([...pool]).slice(0, 10);
+  current   = 0;
+  score     = 0;
+  timings   = [];
+
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('quizScreen').classList.remove('hidden');
+
+  loadQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ── Load Question ─────────────────────────────────────────────────────────────
+function loadQuestion() {
+  answered = false;
+  const q  = questions[current];
+  const total = questions.length;
+
+  // Progress
+  document.getElementById('progressLabel').textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById('progressFill').style.width  = `${((current) / total) * 100}%`;
+
+  // Meta
+  document.getElementById('qCategory').textContent = q.cat;
+  const diffEl = document.getElementById('qDiff');
+  diffEl.textContent  = q.diff.charAt(0).toUpperCase() + q.diff.slice(1);
+  diffEl.className    = 'q-diff ' + q.diff;
+
+  // Question
+  document.getElementById('questionText').innerHTML = q.q;
+
+  // Options
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    div.onclick = () => selectAnswer(i, q.ans, q.exp);
+    container.appendChild(div);
+  });
+
+  // Explanation
+  const exp = document.getElementById('explanation');
+  exp.classList.remove('show');
+  exp.innerHTML = '';
+
+  // Next button
+  document.getElementById('nextBtnWrap').classList.add('hidden');
+
+  // Timer
+  startTimer();
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = 20;
+  const el = document.getElementById('timer');
+  el.textContent = timeLeft;
+  el.className = 'timer';
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    el.textContent = timeLeft;
+    if (timeLeft <= 5)       el.className = 'timer danger';
+    else if (timeLeft <= 10) el.className = 'timer warn';
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!answered) timeOut();
+    }
+  }, 1000);
+}
+
+function timeOut() {
+  answered = true;
+  timings.push(20);
+  const q = questions[current];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[q.ans].classList.add('correct');
+  showExplanation(q.exp, false);
+  document.getElementById('nextBtnWrap').classList.remove('hidden');
+}
+
+// ── Answer ────────────────────────────────────────────────────────────────────
+function selectAnswer(chosen, correct, explanation) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  timings.push(20 - timeLeft);
+
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[correct].classList.add('correct');
+
+  if (chosen === correct) {
+    score++;
+  } else {
+    opts[chosen].classList.add('wrong');
+  }
+
+  showExplanation(explanation, chosen === correct);
+  document.getElementById('nextBtnWrap').classList.remove('hidden');
+}
+
+function showExplanation(text, correct) {
+  const el = document.getElementById('explanation');
+  el.innerHTML = `<strong>${correct ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${text}`;
+  el.classList.add('show');
+}
+
+// ── Next ──────────────────────────────────────────────────────────────────────
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+// ── Results ───────────────────────────────────────────────────────────────────
+function showResults() {
+  clearInterval(timerInterval);
+  document.getElementById('quizScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.remove('hidden');
+
+  const total   = questions.length;
+  const pct     = Math.round((score / total) * 100);
+  const avgTime = Math.round(timings.reduce((a,b) => a+b, 0) / timings.length);
+
+  // Color big score
+  const scoreEl = document.getElementById('bigScore');
+  scoreEl.textContent = pct + '%';
+  scoreEl.style.color = pct >= 80 ? 'var(--accent2)' : pct >= 50 ? 'var(--accent)' : 'var(--danger)';
+
+  document.getElementById('rCorrect').textContent = score;
+  document.getElementById('rWrong').textContent   = total - score;
+  document.getElementById('rTime').textContent    = avgTime + 's';
+
+  // Grade message
+  let msg, grade;
+  if (pct === 100)      { grade='D'; msg='🏆 Perfect score! You\'re a software engineering pro!'; }
+  else if (pct >= 80)   { grade='D'; msg='🌟 Distinction! Excellent understanding of core concepts.'; }
+  else if (pct >= 70)   { grade='C'; msg='👍 Credit! Solid knowledge — keep sharpening your skills.'; }
+  else if (pct >= 50)   { grade='P'; msg='✅ Pass! Good foundation. Review the topics you missed.'; }
+  else                  { grade='F'; msg='📚 Keep studying! Go through the concepts and try again.'; }
+
+  document.getElementById('gradeMsg').textContent = msg;
+  document.getElementById('scoreLabel').textContent = `${score} / ${total} correct — Grade: ${grade}`;
+
+  // Pills by category
+  const cats = {};
+  questions.forEach((q, i) => {
+    if (!cats[q.cat]) cats[q.cat] = {correct:0, total:0};
+    cats[q.cat].total++;
+    if (i < score) cats[q.cat].correct++; // approximate
+  });
+
+  // Recalculate properly
+  const catScore = {};
+  questions.forEach((q, i) => {
+    if (!catScore[q.cat]) catScore[q.cat] = {c:0,t:0};
+    catScore[q.cat].t++;
+  });
+
+  const pillsEl = document.getElementById('scorePills');
+  pillsEl.innerHTML = `<span class="score-pill good">✓ ${score} correct</span><span class="score-pill bad">✗ ${total-score} wrong</span><span class="score-pill">⏱ ${avgTime}s avg</span>`;
+}
+
+// ── Restart ───────────────────────────────────────────────────────────────────
+function restartQuiz() {
+  document.getElementById('resultScreen').classList.add('hidden');
+  startQuiz();
+}
+
+function showStart() {
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
