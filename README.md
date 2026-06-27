@@ -63,7 +63,7 @@ quiz-app/
 ---
 
 ## 🖼 Screenshot
-![DevQuiz Screenshot](untitled.png)
+![DevQuiz Screenshot](screenshot.png)
 
 ---
 
